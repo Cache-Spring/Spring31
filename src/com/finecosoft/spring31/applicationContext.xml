@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans	xmlns="http://www.springframework.org/schema/beans"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:cache="http://www.springframework.org/schema/cache"
+		xsi:schemaLocation="
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context-3.1.xsd
+			http://www.springframework.org/schema/cache 
+			http://www.springframework.org/schema/cache/spring-cache.xsd">
+    
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<property name="url" value="jdbc:mysql://localhost:3306/cachetest"/>
+		<property name="username" value="root"/>
+		<property name="password" value="1111"/>
+	</bean>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+	<bean id="employeeInventory" class="com.finecosoft.spring31.EmployeeInventory">
+		<property name="countryDao" ref="countryDao"/>
+		<property name="employeeDao" ref="employeeDao"/>
+		<property name="languageDao" ref="languageDao"/>
+	</bean>
+
+	<beans profile="noncacheable">
+		<bean id="countryDao" class="com.finecosoft.spring31.dao.nocacheimpl.CountryDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+		<bean id="employeeDao" class="com.finecosoft.spring31.dao.nocacheimpl.EmployeeDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+		<bean id="languageDao" class="com.finecosoft.spring31.dao.nocacheimpl.LanguageDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+	</beans>
+
+	<beans profile="cacheable">
+		<cache:annotation-driven />
+                                     
+		<bean id="countryDao" class="com.finecosoft.spring31.dao.cacheipml.CountryDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+		<bean id="employeeDao" class="com.finecosoft.spring31.dao.cacheipml.EmployeeDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+		<bean id="languageDao" class="com.finecosoft.spring31.dao.cacheipml.LanguageDaoImpl">
+			<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		</bean>
+		<bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+			<property name="caches">
+				<set>
+					<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+						<property name="name" value="countries"/>
+					</bean>
+					<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+						<property name="name" value="employess"/>
+					</bean>
+					<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+						<property name="name" value="languages"/>
+					</bean>
+				</set>
+			</property>
+		</bean>
+	</beans>
+</beans>
